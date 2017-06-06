@@ -2,11 +2,11 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
-import org.python.core.PyFunction;
-import org.python.core.PyInteger;
-import org.python.core.PyObject;
-import org.python.util.PythonInterpreter;
+import cn.dsna.util.images.*;
+import java.awt.image.*;
+
 
 /**
  * Created by Prophet on 6/5/2017.
@@ -16,6 +16,7 @@ public class Controller {
     private static Controller controller;
     public static ArrayList<User> Users = new ArrayList<User>();
     public static User currentUser;
+    public static String verificationCode;
 
 
 
@@ -38,20 +39,30 @@ public class Controller {
         LogOutButtonListener logOutButtonListener = new LogOutButtonListener();
         logOutButtonListener.userInterface = ui;
         ui.logOutButton.addActionListener(logOutButtonListener);
-        controller.GenerateVerificationCode(20);
+        verificationCode = controller.ValidateCodeGenerator();
+        ImageIcon pic1 = new ImageIcon("src/VerificationCode.png");
+        ui.vlable.setIcon(pic1);
+        ChangeButtonListener changeButtonListener = new ChangeButtonListener();
+        changeButtonListener.userInterface = ui;
+        ui.changeButton.addActionListener(changeButtonListener);
     }
 
     public static Controller getController(){
         return controller;
     }
 
-    public void GenerateVerificationCode(int size){
-        PythonInterpreter pythonInterpreter = new PythonInterpreter();
-        pythonInterpreter.execfile("VerificationCodeGenerator.py");
-        PyFunction CodeGenerator = (PyFunction) pythonInterpreter.get("createIdentifyingCode", PyFunction.class);
-        PyObject code = CodeGenerator.__call__(new PyInteger(size));
-        System.out.println(code.toString());
+    public String ValidateCodeGenerator(){
+        ValidateCode codeGen = new ValidateCode(160,40,4,100);
+        String code = codeGen.getCode();
+        try{
+            codeGen.write("src/VerificationCode.png");
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return code;
     }
+
+
 
 }
 
@@ -90,31 +101,57 @@ class LoginButtonListener implements  ActionListener {
         Controller controller = Controller.getController();
         String username = userInterface.username.getText();
         String password = String.valueOf(userInterface.pwd.getPassword());
-        for (User user: controller.Users) {
-            if(username.equals(user.username)){
-                if(password.equals(user.getPassword())){
-                    JOptionPane.showMessageDialog(null, "Login Success!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    if(user.getUserType().equals("Computer Center Staff")) userInterface.addUserButton.setEnabled(true);
-                    else if(user.getUserType().equals("Faculty members")) userInterface.addUserButton.setEnabled(false);
-                    else userInterface.addUserButton.setEnabled(false);
-                    userInterface.UserLable.setText(user.username);
-                    userInterface.UserGroup.setText(user.getUserType());
-                    controller.currentUser = user;
-                    userInterface.username.setText("");
-                    userInterface.pwd.setText("");
-                    return;
-                }
-                else {
-                    JOptionPane.showMessageDialog(null,"Wrong password! Please check your input!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    userInterface.username.setText("");
-                    userInterface.pwd.setText("");
-                    return;
+        String verificationCode = userInterface.vcodeString.getText();
+        if(verificationCode.equals(controller.verificationCode)){
+            for (User user: controller.Users) {
+                if(username.equals(user.username)){
+                    if(password.equals(user.getPassword())){
+                        JOptionPane.showMessageDialog(null, "Login Success!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        if(user.getUserType().equals("Computer Center Staff")) userInterface.addUserButton.setEnabled(true);
+                        else if(user.getUserType().equals("Faculty members")) userInterface.addUserButton.setEnabled(false);
+                        else userInterface.addUserButton.setEnabled(false);
+                        userInterface.UserLable.setText(user.username);
+                        userInterface.UserGroup.setText(user.getUserType());
+                        controller.currentUser = user;
+                        userInterface.username.setText("");
+                        userInterface.pwd.setText("");
+                        userInterface.vcodeString.setText("");
+                        controller.verificationCode = controller.ValidateCodeGenerator();
+                        ImageIcon pic2 = new ImageIcon("src/VerificationCode.png");
+                        pic2.getImage().flush();
+                        userInterface.vlable.setIcon(pic2);
+                        return;
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(null,"Wrong password! Please check your input!", "ERROR", JOptionPane.ERROR_MESSAGE);
+                        userInterface.username.setText("");
+                        userInterface.pwd.setText("");
+                        userInterface.vcodeString.setText("");
+                        controller.verificationCode = controller.ValidateCodeGenerator();
+                        ImageIcon pic2 = new ImageIcon("src/VerificationCode.png");
+                        pic2.getImage().flush();
+                        userInterface.vlable.setIcon(pic2);
+                        return;
+                    }
                 }
             }
+        }else{
+            JOptionPane.showMessageDialog(null,"Wrong Validate Code! Please input again!", "ERROR", JOptionPane.ERROR_MESSAGE);
+            userInterface.vcodeString.setText("");
+            controller.verificationCode = controller.ValidateCodeGenerator();
+            ImageIcon pic2 = new ImageIcon("src/VerificationCode.png");
+            pic2.getImage().flush();
+            userInterface.vlable.setIcon(pic2);
+            return;
         }
+
         JOptionPane.showMessageDialog(null,"No Such User! Please check your input!", "ERROR", JOptionPane.ERROR_MESSAGE);
         userInterface.username.setText("");
         userInterface.pwd.setText("");
+        controller.verificationCode = controller.ValidateCodeGenerator();
+        ImageIcon pic2 = new ImageIcon("src/VerificationCode.png");
+        pic2.getImage().flush();
+        userInterface.vlable.setIcon(pic2);
         return;
     }
 }
@@ -151,5 +188,18 @@ class LogOutButtonListener implements ActionListener{
         userInterface.UserLable.setText("Not Logined");
         userInterface.UserGroup.setText("Unknown");
         userInterface.addUserButton.setEnabled(false);
+    }
+}
+
+class ChangeButtonListener implements ActionListener{
+    public  UserInterface userInterface;
+    @Override
+    public void actionPerformed(ActionEvent e){
+        Controller controller = Controller.getController();
+        controller.verificationCode = controller.ValidateCodeGenerator();
+        ImageIcon pic2 = new ImageIcon("src/VerificationCode.png");
+        pic2.getImage().flush();
+        userInterface.vlable.setIcon(pic2);
+        userInterface.vcodeString.setText("");
     }
 }

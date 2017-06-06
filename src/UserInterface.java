@@ -22,7 +22,9 @@ public class UserInterface
     public JPasswordField Add_pwd;
     public JLabel UserGroup;
     public JButton logOutButton;
-    public JPanel VerificationPanel;
+    public JLabel vlable;
+    public JTextField vcodeString;
+    public JButton changeButton;
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
@@ -42,6 +44,8 @@ public class UserInterface
         DefaultTableCellRenderer r   =   new   DefaultTableCellRenderer();
         r.setHorizontalAlignment(JLabel.CENTER);
         table1.setDefaultRenderer(Object.class,   r);
+        ImageIcon pic1 = new ImageIcon("src/init.png");
+        vlable =  new JLabel(pic1);
     }
 
     public UserInterface(){
