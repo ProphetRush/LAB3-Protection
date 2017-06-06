@@ -22,6 +22,7 @@ public class UserInterface
     public JPasswordField Add_pwd;
     public JLabel UserGroup;
     public JButton logOutButton;
+    public JPanel VerificationPanel;
 
     private void createUIComponents() {
         // TODO: place custom component creation code here

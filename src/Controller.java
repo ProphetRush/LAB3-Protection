@@ -3,6 +3,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import org.python.core.PyFunction;
+import org.python.core.PyInteger;
+import org.python.core.PyObject;
+import org.python.util.PythonInterpreter;
 
 /**
  * Created by Prophet on 6/5/2017.
@@ -34,10 +38,19 @@ public class Controller {
         LogOutButtonListener logOutButtonListener = new LogOutButtonListener();
         logOutButtonListener.userInterface = ui;
         ui.logOutButton.addActionListener(logOutButtonListener);
+        controller.GenerateVerificationCode(20);
     }
 
     public static Controller getController(){
         return controller;
+    }
+
+    public void GenerateVerificationCode(int size){
+        PythonInterpreter pythonInterpreter = new PythonInterpreter();
+        pythonInterpreter.execfile("VerificationCodeGenerator.py");
+        PyFunction CodeGenerator = (PyFunction) pythonInterpreter.get("createIdentifyingCode", PyFunction.class);
+        PyObject code = CodeGenerator.__call__(new PyInteger(size));
+        System.out.println(code.toString());
     }
 
 }
