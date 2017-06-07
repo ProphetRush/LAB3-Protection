@@ -3,8 +3,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import cn.dsna.util.images.*;
+import sun.misc.BASE64Encoder;
+
 import java.awt.image.*;
 
 
@@ -35,7 +39,7 @@ public class Controller {
         PlayButtonListener playButtonListener = new PlayButtonListener();
         playButtonListener.userInterface = ui;
         ui.PLAYButton.addActionListener(playButtonListener);
-        Users.add(new User("admin", "123456", "Computer Center Staff"));
+        Users.add(new User("admin", controller.MD5Encode("123456"), "Computer Center Staff"));
         LogOutButtonListener logOutButtonListener = new LogOutButtonListener();
         logOutButtonListener.userInterface = ui;
         ui.logOutButton.addActionListener(logOutButtonListener);
@@ -62,6 +66,19 @@ public class Controller {
         return code;
     }
 
+    public String MD5Encode(String pwd) {
+        try {
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            BASE64Encoder base64en = new BASE64Encoder();
+            String newstr = base64en.encode(md5.digest(pwd.getBytes("utf-8")));
+            return newstr;
+        }
+        catch (Exception e)
+        {
+            return "";
+        }
+    }
+
 
 
 }
@@ -72,7 +89,7 @@ class AddButtonListener implements ActionListener {
     public void actionPerformed(ActionEvent e){
         Controller controller = Controller.getController();
         String username = userInterface.Add_Username.getText();
-        String password = String.valueOf(userInterface.Add_pwd.getPassword());
+        String password = controller.MD5Encode(String.valueOf(userInterface.Add_pwd.getPassword()));
         String userType = userInterface.add_userType.getSelectedItem().toString();
         for (User user: controller.Users) {
             if (username.equals(user.username)){
@@ -100,7 +117,7 @@ class LoginButtonListener implements  ActionListener {
     public void actionPerformed(ActionEvent e){
         Controller controller = Controller.getController();
         String username = userInterface.username.getText();
-        String password = String.valueOf(userInterface.pwd.getPassword());
+        String password = controller.MD5Encode(String.valueOf(userInterface.pwd.getPassword()));
         String verificationCode = userInterface.vcodeString.getText();
         if(verificationCode.equals(controller.verificationCode)){
             for (User user: controller.Users) {
